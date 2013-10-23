@@ -1,0 +1,14 @@
+{
+    "name": "jadeit/crud-bundle",
+    "description": "A Symfony2 bundle to help with CRUD operations",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jurgens du Toit",
+            "email": "jrgns@jadeit.co.za"
+        }
+    ],
+    "require": {
+
+    }
+}
