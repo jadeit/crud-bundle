@@ -1,0 +1,30 @@
+record:
+    pattern:  /
+    defaults: { _controller: "JadeITApplicationBundle:Record:index" }
+
+record_show:
+    pattern:  /{id}/show
+    defaults: { _controller: "JadeITApplicationBundle:Record:show" }
+
+record_new:
+    pattern:  /new
+    defaults: { _controller: "JadeITApplicationBundle:Record:new" }
+
+record_create:
+    pattern:  /create
+    defaults: { _controller: "JadeITApplicationBundle:Record:create" }
+    requirements: { _method: post }
+
+record_edit:
+    pattern:  /{id}/edit
+    defaults: { _controller: "JadeITApplicationBundle:Record:edit" }
+
+record_update:
+    pattern:  /{id}/update
+    defaults: { _controller: "JadeITApplicationBundle:Record:update" }
+    requirements: { _method: post|put }
+
+record_delete:
+    pattern:  /{id}/delete
+    defaults: { _controller: "JadeITApplicationBundle:Record:delete" }
+    requirements: { _method: post|delete }

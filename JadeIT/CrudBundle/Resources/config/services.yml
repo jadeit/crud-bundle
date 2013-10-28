@@ -1,0 +1,12 @@
+parameters:
+    jade.i.t.application.crud.class: JadeIT\ApplicationBundle\Service\Crud
+
+services:
+    # This service needs to be extended to create something like ItemCrud service
+    # where the entity class name shortcut is passed to the service
+    jade.i.t.application:
+        class: %jade.i.t.application.crud.class%
+        arguments: ['JadeITApplicationBundle:Record']
+        calls:
+            - [ setContainer, [@service_container] ]
+

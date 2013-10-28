@@ -1,0 +1,3 @@
+JadeITApplicationBundle_record:
+    resource: "@JadeITApplicationBundle/Resources/config/routing/record.yml"
+    prefix:   /record

@@ -11,4 +11,7 @@
     "require": {
 
     }
+    "autoload": {
+        "psr-0": { "JadeIT\\CrudBundle\\": "" }
+    }
 }
