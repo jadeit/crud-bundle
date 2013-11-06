@@ -107,6 +107,7 @@ class Crud extends ContainerAware
      */
     public function delete($entity)
     {
+        $em = $this->container->get('doctrine')->getManager();
         $em->remove($entity);
 
         // Fire the Delete CRUD Event
