@@ -35,6 +35,14 @@ class Crud extends ContainerAware
         $dispatcher = $this->container->get('event_dispatcher');
         $dispatcher->dispatch($this->getEventPrefix() . '.all', $event);
 
+        // Maybe add this to a separate (app) listener
+        $paginator  = $this->container->get('knp_paginator');
+        $entities = $paginator->paginate(
+            $entities,
+            $this->container->get('request')->query->get('page', 1)/*page number*/,
+            10/*limit per page*/
+        );
+
         // Delay returning so that the event can deal with the new entity first
         return $entities;
     }
@@ -82,7 +90,8 @@ class Crud extends ContainerAware
      */
     public function update($entity)
     {
-        $em->update($entity);
+        $em = $this->container->get('doctrine')->getManager();
+        $em->persist($entity);
 
         // Fire the Update CRUD Event
         $event = new CrudEvent($entity);
