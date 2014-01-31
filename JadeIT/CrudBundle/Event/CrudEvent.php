@@ -7,6 +7,11 @@ class CrudEvent extends Event
 {
     private $entity;
 
+    public function __construct($entity)
+    {
+        $this->entity = $entity;
+    }
+
     /**
      * Get entity
      *
