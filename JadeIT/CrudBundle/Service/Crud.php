@@ -31,7 +31,6 @@ class Crud extends ContainerAware
      */
     public function all()
     {
-        $em = $this->container->get('doctrine')->getManager();
         $repository = $this->getRepository();
         if ($policy = $this->getPolicy()) {
             $entities = $policy->resolveScope($repository);
@@ -207,10 +206,10 @@ class Crud extends ContainerAware
     {
         if ($policyClass = $this->getPolicyClass()) {
             $em = $this->container->get('doctrine')->getManager();
-            $entityName = $em->getClassMetadata($this->entityShortcut)->getName();
+            $entity = $em->getClassMetadata($this->entityShortcut);
 
             $user = $this->container->get("security.context")->getToken()->getUser();
-            $record = $record === null ? $entityName : $record;
+            $record = $record === null ? $entity : $record;
             return new $policyClass($user, $record);
         }
         return null;
