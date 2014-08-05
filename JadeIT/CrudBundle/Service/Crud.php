@@ -4,6 +4,8 @@ namespace JadeIT\CrudBundle\Service;
 
 use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 use JadeIT\CrudBundle\Event\CrudEvent;
 
@@ -17,6 +19,8 @@ class Crud extends ContainerAware
 
     private $eventPrefix;
 
+    private $policyClass;
+
     public function __construct($entityShortcut)
     {
         $this->entityShortcut = $entityShortcut;
@@ -28,7 +32,12 @@ class Crud extends ContainerAware
     public function all()
     {
         $em = $this->container->get('doctrine')->getManager();
-        $entities = $em->getRepository($this->entityShortcut)->findAll();
+        $repository = $this->getRepository();
+        if ($policy = $this->getPolicy()) {
+            $entities = $policy->resolveScope($repository);
+        } else {
+            $entities = $repository->findAll();
+        }
 
         // Fire the All CRUD Event
         $event = new CrudEvent($entities);
@@ -52,6 +61,8 @@ class Crud extends ContainerAware
      */
     public function create($entity)
     {
+        $this->checkPolicy('create', $entity);
+
         $em = $this->container->get('doctrine')->getManager();
         $em->persist($entity);
 
@@ -71,11 +82,12 @@ class Crud extends ContainerAware
     public function read($id)
     {
         $em = $this->container->get('doctrine')->getManager();
-        $entity = $em->getRepository($this->entityShortcut)->find($id);
+        $entity = $this->getRepository()->find($id);
 
         if (!$entity) {
-            throw $this->createNotFoundException('Unable to find ' . $this->getEntityShortcut() . '.');
+            throw new NotFoundHttpException('Unable to find ' . $this->getEntityShortcut() . '.');
         }
+        $this->checkPolicy('read', $entity);
 
         // Fire the New CRUD Event
         $event = new CrudEvent($entity);
@@ -90,6 +102,8 @@ class Crud extends ContainerAware
      */
     public function update($entity)
     {
+        $this->checkPolicy('update', $entity);
+
         $em = $this->container->get('doctrine')->getManager();
         $em->persist($entity);
 
@@ -107,6 +121,8 @@ class Crud extends ContainerAware
      */
     public function delete($entity)
     {
+        $this->checkPolicy('delete', $entity);
+
         $em = $this->container->get('doctrine')->getManager();
         $em->remove($entity);
 
@@ -167,5 +183,58 @@ class Crud extends ContainerAware
         $this->eventPrefix = $eventPrefix;
 
         return $this;
+    }
+
+    private function getRepository()
+    {
+        $em = $this->container->get('doctrine')->getManager();
+        return $em->getRepository($this->entityShortcut);
+    }
+
+    public function checkPolicy($action, $entity)
+    {
+        $policy = $this->getPolicy($entity);
+        if (empty($policy)) {
+            return true;
+        }
+        if ($policy->check($action) === false) {
+            throw new AccessDeniedException('Permission Denied');
+        }
+        return true;
+    }
+
+    public function getPolicy($record = null)
+    {
+        if ($policyClass = $this->getPolicyClass()) {
+            $em = $this->container->get('doctrine')->getManager();
+            $entityName = $em->getClassMetadata($this->entityShortcut)->getName();
+
+            $user = $this->container->get("security.context")->getToken()->getUser();
+            $record = $record === null ? $entityName : $record;
+            return new $policyClass($user, $record);
+        }
+        return null;
+    }
+
+    public function getPolicyClass()
+    {
+        if ($this->policyClass === null) {
+            $em = $this->container->get('doctrine')->getManager();
+            $entityName = $em->getClassMetadata($this->entityShortcut)->getName();
+            //try {
+                $this->setPolicyClass($entityName . 'Policy');
+            //} catch (\RuntimeException $e) {
+                // TODO Check for a default application policy
+            //    $this->setPolicyClass('Champs\Bundle\Policy\ApplicationPolicy');
+            //}
+        }
+        return $this->policyClass;
+    }
+
+    public function setPolicyClass($className)
+    {
+        if (class_exists('\\' . $className, true)) {
+            $this->policyClass = $className;
+        }
     }
 }
