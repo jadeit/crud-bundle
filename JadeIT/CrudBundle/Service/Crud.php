@@ -43,16 +43,21 @@ class Crud extends ContainerAware
         $dispatcher = $this->container->get('event_dispatcher');
         $dispatcher->dispatch($this->getEventPrefix() . '.all', $event);
 
+        // Delay returning so that the event can deal with the new entity first
+        return $entities;
+    }
+
+    public function paged()
+    {
+        $entities = $this->all();
+
         // Maybe add this to a separate (app) listener
         $paginator  = $this->container->get('knp_paginator');
-        $entities = $paginator->paginate(
+        return $paginator->paginate(
             $entities,
             $this->container->get('request')->query->get('page', 1)/*page number*/,
             10/*limit per page*/
         );
-
-        // Delay returning so that the event can deal with the new entity first
-        return $entities;
     }
 
     /**
